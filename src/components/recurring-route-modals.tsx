@@ -12,8 +12,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useState } from 'react';
 
 const routeSchema = z.object({
-  name: z.string().min(1, 'Route name is required.'),
-  waypoints: z.array(z.string().min(1, 'Waypoint cannot be empty.')).min(2, 'At least two waypoints are required.'),
+  name: z.string().min(1, 'Le nom de l\'itinéraire est requis.'),
+  waypoints: z.array(z.string().min(1, 'Le point de cheminement ne peut pas être vide.')).min(2, 'Au moins deux points de cheminement sont requis.'),
 });
 
 type RouteFormValues = z.infer<typeof routeSchema>;
@@ -54,17 +54,17 @@ export function RecurringRouteForm({ onSave, onClose, existingRoute }: Recurring
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Route Name</FormLabel>
+              <FormLabel>Nom de l'itinéraire</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Daily Commute" {...field} />
+                <Input placeholder="ex: Trajet quotidien" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <div>
-          <FormLabel>Waypoints</FormLabel>
-          <FormDescription className="text-xs mb-2">Enter the addresses or locations for this route.</FormDescription>
+          <FormLabel>Points de cheminement</FormLabel>
+          <FormDescription className="text-xs mb-2">Saisissez les adresses ou les lieux de cet itinéraire.</FormDescription>
           <div className="space-y-2 mt-2">
             {fields.map((field, index) => (
               <FormField
@@ -75,7 +75,7 @@ export function RecurringRouteForm({ onSave, onClose, existingRoute }: Recurring
                   <FormItem>
                     <div className="flex items-center gap-2">
                       <FormControl>
-                        <Input placeholder={`Waypoint ${index + 1}`} {...field} />
+                        <Input placeholder={`Point de cheminement ${index + 1}`} {...field} />
                       </FormControl>
                       <Button
                         type="button"
@@ -83,7 +83,7 @@ export function RecurringRouteForm({ onSave, onClose, existingRoute }: Recurring
                         size="icon"
                         onClick={() => remove(index)}
                         disabled={fields.length <= 2}
-                        aria-label="Remove waypoint"
+                        aria-label="Supprimer le point de cheminement"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -102,12 +102,12 @@ export function RecurringRouteForm({ onSave, onClose, existingRoute }: Recurring
             className="mt-2"
           >
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Waypoint
+            Ajouter un point de cheminement
           </Button>
         </div>
         <DialogFooter>
-          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button type="submit">Save Route</Button>
+          <Button type="button" variant="ghost" onClick={onClose}>Annuler</Button>
+          <Button type="submit">Enregistrer l'itinéraire</Button>
         </DialogFooter>
       </form>
     </Form>
@@ -115,7 +115,7 @@ export function RecurringRouteForm({ onSave, onClose, existingRoute }: Recurring
 }
 
 const addTripSchema = z.object({
-    distance: z.coerce.number().positive("Distance must be a positive number.")
+    distance: z.coerce.number().positive("La distance doit être un nombre positif.")
 })
 type AddTripValues = z.infer<typeof addTripSchema>
 
@@ -144,13 +144,13 @@ export function AddTripFromRouteDialog({ route, setDailyTrips }: AddTripFromRout
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-accent text-accent-foreground hover:bg-accent/90">Use Route</Button>
+                <Button className="bg-accent text-accent-foreground hover:bg-accent/90">Utiliser l'itinéraire</Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Add Trip from '{route.name}'</DialogTitle>
+                    <DialogTitle>Ajouter un trajet depuis '{route.name}'</DialogTitle>
                     <DialogDescription>
-                        Enter the distance for today's trip using this route.
+                        Saisissez la distance pour le trajet d'aujourd'hui en utilisant cet itinéraire.
                     </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
@@ -170,9 +170,9 @@ export function AddTripFromRouteDialog({ route, setDailyTrips }: AddTripFromRout
                         />
                          <DialogFooter>
                             <DialogClose asChild>
-                                <Button type="button" variant="ghost">Cancel</Button>
+                                <Button type="button" variant="ghost">Annuler</Button>
                             </DialogClose>
-                            <Button type="submit">Add to Today's Trips</Button>
+                            <Button type="submit">Ajouter aux trajets d'aujourd'hui</Button>
                         </DialogFooter>
                     </form>
                 </Form>

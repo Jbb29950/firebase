@@ -8,7 +8,7 @@ export function AppHeader() {
           <Route className="h-6 w-6" />
         </div>
         <h1 className="text-3xl font-bold text-foreground">
-          Distance Diary
+          Journal de bord des distances
         </h1>
       </div>
     </header>

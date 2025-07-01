@@ -40,8 +40,8 @@ interface DailyTripsProps {
 }
 
 const tripSchema = z.object({
-  name: z.string().min(1, { message: 'Trip name is required.' }),
-  distance: z.coerce.number().min(0, { message: 'Distance must be a positive number.' }),
+  name: z.string().min(1, { message: 'Le nom du trajet est requis.' }),
+  distance: z.coerce.number().min(0, { message: 'La distance doit être un nombre positif.' }),
 });
 
 type TripFormValues = z.infer<typeof tripSchema>;
@@ -74,8 +74,8 @@ export function DailyTrips({ dailyTrips, setDailyTrips }: DailyTripsProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Today's Trips</CardTitle>
-        <CardDescription>Log your trips for today. Add a new trip or use one of your recurring routes below.</CardDescription>
+        <CardTitle>Trajets d'aujourd'hui</CardTitle>
+        <CardDescription>Enregistrez vos trajets d'aujourd'hui. Ajoutez un nouveau trajet ou utilisez l'un de vos itinéraires récurrents ci-dessous.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <Form {...form}>
@@ -85,9 +85,9 @@ export function DailyTrips({ dailyTrips, setDailyTrips }: DailyTripsProps) {
               name="name"
               render={({ field }) => (
                 <FormItem className="flex-grow w-full sm:w-auto">
-                  <FormLabel>Trip Name</FormLabel>
+                  <FormLabel>Nom du trajet</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. Home to Work" {...field} />
+                    <Input placeholder="ex: Maison au travail" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -107,7 +107,7 @@ export function DailyTrips({ dailyTrips, setDailyTrips }: DailyTripsProps) {
               )}
             />
             <Button type="submit" className="w-full sm:w-auto">
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Trip
+              <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un trajet
             </Button>
           </form>
         </Form>
@@ -115,7 +115,7 @@ export function DailyTrips({ dailyTrips, setDailyTrips }: DailyTripsProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Trip Name</TableHead>
+                <TableHead>Nom du trajet</TableHead>
                 <TableHead className="text-right w-[120px]">Distance</TableHead>
                 <TableHead className="w-[80px] text-right">Actions</TableHead>
               </TableRow>
@@ -127,7 +127,7 @@ export function DailyTrips({ dailyTrips, setDailyTrips }: DailyTripsProps) {
                     <TableCell className="font-medium">{trip.name}</TableCell>
                     <TableCell className="text-right">{trip.distance.toFixed(1)} km</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => deleteTrip(trip.id)} aria-label="Delete trip">
+                      <Button variant="ghost" size="icon" onClick={() => deleteTrip(trip.id)} aria-label="Supprimer le trajet">
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </TableCell>
@@ -136,7 +136,7 @@ export function DailyTrips({ dailyTrips, setDailyTrips }: DailyTripsProps) {
               ) : (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center h-24 text-muted-foreground">
-                    No trips added for today.
+                    Aucun trajet ajouté pour aujourd'hui.
                   </TableCell>
                 </TableRow>
               )}

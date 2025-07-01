@@ -11,18 +11,18 @@ import { Separator } from '@/components/ui/separator';
 const initialRecurringRoutes: RecurringRoute[] = [
     {
         id: '1',
-        name: 'Morning Commute',
-        waypoints: ['123 Main St, Anytown, USA', '456 Oak Ave, Work City, USA'],
+        name: 'Trajet du matin',
+        waypoints: ['123 Rue Principale, Anytown, FR', '456 Avenue du Chêne, Work City, FR'],
     },
     {
         id: '2',
-        name: 'Evening Return',
-        waypoints: ['456 Oak Ave, Work City, USA', '123 Main St, Anytown, USA'],
+        name: 'Retour du soir',
+        waypoints: ['456 Avenue du Chêne, Work City, FR', '123 Rue Principale, Anytown, FR'],
     },
     {
         id: '3',
-        name: 'Weekend Errands',
-        waypoints: ['Home', 'Grocery Store', 'Post Office', 'Hardware Store', 'Home'],
+        name: 'Courses du week-end',
+        waypoints: ['Maison', 'Épicerie', 'Bureau de poste', 'Quincaillerie', 'Maison'],
     }
 ];
 
@@ -49,7 +49,7 @@ export default function Home() {
       </main>
       <footer className="py-4 border-t">
           <div className="container mx-auto text-center text-sm text-muted-foreground">
-              <p>Distance Diary</p>
+              <p>Journal de bord des distances</p>
           </div>
       </footer>
     </div>

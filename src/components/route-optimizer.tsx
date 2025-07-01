@@ -21,7 +21,7 @@ interface RouteOptimizerProps {
 }
 
 const optimizerSchema = z.object({
-  optimizationCriteria: z.string().min(10, 'Please provide some optimization criteria (at least 10 characters).'),
+  optimizationCriteria: z.string().min(10, "Veuillez fournir des critères d'optimisation (au moins 10 caractères)."),
 });
 
 type OptimizerFormValues = z.infer<typeof optimizerSchema>;
@@ -33,7 +33,7 @@ export function RouteOptimizer({ recurringRoutes }: RouteOptimizerProps) {
 
   const form = useForm<OptimizerFormValues>({
     resolver: zodResolver(optimizerSchema),
-    defaultValues: { optimizationCriteria: 'Minimize travel time and find the shortest distance.' }
+    defaultValues: { optimizationCriteria: 'Minimiser le temps de trajet et trouver la distance la plus courte.' }
   });
 
   const handleSubmit = async (data: OptimizerFormValues) => {
@@ -47,7 +47,7 @@ export function RouteOptimizer({ recurringRoutes }: RouteOptimizerProps) {
       });
       setOptimizations(result);
     } catch (e) {
-      setError('An error occurred while optimizing routes. Please try again.');
+      setError("Une erreur est survenue lors de l'optimisation des itinéraires. Veuillez réessayer.");
       console.error(e);
     } finally {
       setIsLoading(false);
@@ -57,14 +57,14 @@ export function RouteOptimizer({ recurringRoutes }: RouteOptimizerProps) {
   return (
     <DialogContent className="max-w-4xl">
       <DialogHeader>
-        <DialogTitle>AI Route Optimizer</DialogTitle>
+        <DialogTitle>Optimiseur d'itinéraire IA</DialogTitle>
         <DialogDescription>
-          Get AI-powered suggestions to make your recurring routes more efficient.
+          Obtenez des suggestions basées sur l'IA pour rendre vos itinéraires récurrents plus efficaces.
         </DialogDescription>
       </DialogHeader>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 py-4">
         <div className="flex flex-col">
-          <h3 className="font-semibold mb-2">Your Routes & Criteria</h3>
+          <h3 className="font-semibold mb-2">Vos itinéraires et critères</h3>
           <Card className="mb-4">
             <CardContent className="p-4">
               <ScrollArea className="h-32">
@@ -86,9 +86,9 @@ export function RouteOptimizer({ recurringRoutes }: RouteOptimizerProps) {
                 name="optimizationCriteria"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Optimization Criteria</FormLabel>
+                    <FormLabel>Critères d'optimisation</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="e.g., Minimize travel time, avoid tolls..." {...field} rows={3} />
+                      <Textarea placeholder="ex: Minimiser le temps de trajet, éviter les péages..." {...field} rows={3} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -96,20 +96,20 @@ export function RouteOptimizer({ recurringRoutes }: RouteOptimizerProps) {
               />
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Suggest Optimizations
+                Suggérer des optimisations
               </Button>
             </form>
           </Form>
         </div>
         <div className="flex flex-col">
-          <h3 className="font-semibold mb-2">AI Suggestions</h3>
+          <h3 className="font-semibold mb-2">Suggestions de l'IA</h3>
             <div className="border rounded-lg h-full min-h-[21rem] flex flex-col">
               {isLoading && (
                  <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                  </div>
               )}
-              {error && <div className="p-4"><Alert variant="destructive"><AlertTitle>Error</AlertTitle><AlertDescription>{error}</AlertDescription></Alert></div>}
+              {error && <div className="p-4"><Alert variant="destructive"><AlertTitle>Erreur</AlertTitle><AlertDescription>{error}</AlertDescription></Alert></div>}
               {optimizations && (
                 <ScrollArea className="flex-grow">
                   <div className="p-4 space-y-4">
@@ -120,16 +120,16 @@ export function RouteOptimizer({ recurringRoutes }: RouteOptimizerProps) {
                         </CardHeader>
                         <CardContent className="space-y-3 text-sm">
                           <div>
-                            <h4 className="font-medium text-muted-foreground">Original Route:</h4>
+                            <h4 className="font-medium text-muted-foreground">Itinéraire original :</h4>
                             <p>{opt.originalRoute.join(' → ')}</p>
                           </div>
                           <div>
-                            <h4 className="font-medium text-primary">Optimized Route:</h4>
+                            <h4 className="font-medium text-primary">Itinéraire optimisé :</h4>
                             <p className="font-semibold">{opt.optimizedWaypoints.join(' → ')}</p>
                           </div>
                           <Separator />
                           <div>
-                            <h4 className="font-medium text-muted-foreground">Summary:</h4>
+                            <h4 className="font-medium text-muted-foreground">Résumé :</h4>
                             <p>{opt.optimizationSummary}</p>
                           </div>
                         </CardContent>
@@ -140,7 +140,7 @@ export function RouteOptimizer({ recurringRoutes }: RouteOptimizerProps) {
               )}
               {!isLoading && !error && !optimizations && (
                 <div className="flex items-center justify-center h-full bg-muted/30 rounded-b-lg">
-                    <p className="text-muted-foreground text-center p-4">AI suggestions will appear here.</p>
+                    <p className="text-muted-foreground text-center p-4">Les suggestions de l'IA apparaîtront ici.</p>
                 </div>
               )}
             </div>

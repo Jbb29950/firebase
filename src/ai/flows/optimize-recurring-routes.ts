@@ -2,11 +2,11 @@
 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow to suggest optimizations to recurring routes.
+ * @fileOverview Ce fichier définit un flux Genkit pour suggérer des optimisations aux itinéraires récurrents.
  *
- * - optimizeRecurringRoutes - A function that suggests optimized routes based on user's recurring trips.
- * - OptimizeRecurringRoutesInput - The input type for the optimizeRecurringRoutes function.
- * - OptimizeRecurringRoutesOutput - The return type for the optimizeRecurringRoutes function.
+ * - optimizeRecurringRoutes - Une fonction qui suggère des itinéraires optimisés en fonction des trajets récurrents de l'utilisateur.
+ * - OptimizeRecurringRoutesInput - Le type d'entrée pour la fonction optimizeRecurringRoutes.
+ * - OptimizeRecurringRoutesOutput - Le type de retour pour la fonction optimizeRecurringRoutes.
  */
 
 import {ai} from '@/ai/genkit';
@@ -15,23 +15,23 @@ import {z} from 'genkit';
 const OptimizeRecurringRoutesInputSchema = z.object({
   recurringRoutes: z.array(
     z.object({
-      name: z.string().describe('The name of the route.'),
-      waypoints: z.array(z.string().describe('An address on the route.')).describe('The addresses/waypoints of the route.'),
+      name: z.string().describe("Le nom de l'itinéraire."),
+      waypoints: z.array(z.string().describe("Une adresse sur l'itinéraire.")).describe("Les adresses/points de cheminement de l'itinéraire."),
     })
-  ).describe('An array of recurring routes, each containing a name and a list of waypoints (addresses).'),
-  optimizationCriteria: z.string().describe('Specific criteria for optimization, such as minimizing distance, travel time, or avoiding tolls.'),
+  ).describe("Un tableau d'itinéraires récurrents, chacun contenant un nom et une liste de points de cheminement (adresses)."),
+  optimizationCriteria: z.string().describe("Critères spécifiques d'optimisation, tels que la minimisation de la distance, du temps de trajet ou l'évitement des péages."),
 });
 export type OptimizeRecurringRoutesInput = z.infer<typeof OptimizeRecurringRoutesInputSchema>;
 
 const OptimizeRecurringRoutesOutputSchema = z.object({
   optimizedRoutes: z.array(
     z.object({
-      routeName: z.string().describe('The name of the route that was optimized.'),
-      originalRoute: z.array(z.string()).describe('Original route waypoints'),
-      optimizedWaypoints: z.array(z.string()).describe('The optimized list of waypoints for the route.'),
-      optimizationSummary: z.string().describe('A summary of the optimizations made, including reasons and expected benefits.'),
+      routeName: z.string().describe("Le nom de l'itinéraire qui a été optimisé."),
+      originalRoute: z.array(z.string()).describe("Points de cheminement de l'itinéraire original"),
+      optimizedWaypoints: z.array(z.string()).describe("La liste optimisée des points de cheminement pour l'itinéraire."),
+      optimizationSummary: z.string().describe("Un résumé des optimisations effectuées, y compris les raisons et les avantages attendus."),
     })
-  ).describe('An array of optimized routes, including the optimized waypoints and a summary of the changes.'),
+  ).describe("Un tableau d'itinéraires optimisés, comprenant les points de cheminement optimisés et un résumé des modifications."),
 });
 export type OptimizeRecurringRoutesOutput = z.infer<typeof OptimizeRecurringRoutesOutputSchema>;
 
@@ -43,22 +43,22 @@ const prompt = ai.definePrompt({
   name: 'optimizeRecurringRoutesPrompt',
   input: {schema: OptimizeRecurringRoutesInputSchema},
   output: {schema: OptimizeRecurringRoutesOutputSchema},
-  prompt: `You are an AI route optimization expert. Given a set of recurring routes and optimization criteria, suggest the most efficient routes.
+  prompt: `Vous êtes un expert en optimisation d'itinéraires IA. Étant donné un ensemble d'itinéraires récurrents et des critères d'optimisation, suggérez les itinéraires les plus efficaces.
 
-Here are the recurring routes:
+Voici les itinéraires récurrents :
 {{#each recurringRoutes}}
-  Route Name: {{this.name}}
-  Waypoints: {{this.waypoints}}
+  Nom de l'itinéraire : {{this.name}}
+  Points de cheminement : {{this.waypoints}}
 {{/each}}
 
-Optimization Criteria: {{{optimizationCriteria}}}
+Critères d'optimisation : {{{optimizationCriteria}}}
 
-Analyze these routes and suggest optimizations based on the provided criteria. Consider factors such as distance, travel time, and potential obstacles.
+Analysez ces itinéraires et suggérez des optimisations en fonction des critères fournis. Tenez compte de facteurs tels que la distance, le temps de trajet et les obstacles potentiels.
 
-Return an array of optimized routes, including the optimized waypoints and a summary of the changes.
-Make sure the waypoints in the optimizedRoutes object represents addresses only, without any additional context.
-Ensure that routeName is only the name of the route, without any additional context.
-Make sure to include the originalRoute to show users what the route was before optimization.
+Renvoyez un tableau d'itinéraires optimisés, y compris les points de cheminement optimisés et un résumé des modifications.
+Assurez-vous que les points de cheminement dans l'objet optimizedRoutes représentent uniquement des adresses, sans aucun contexte supplémentaire.
+Assurez-vous que routeName est uniquement le nom de l'itinéraire, sans aucun contexte supplémentaire.
+Assurez-vous d'inclure originalRoute pour montrer aux utilisateurs quel était l'itinéraire avant l'optimisation.
 `,
 });
 
@@ -73,4 +73,3 @@ const optimizeRecurringRoutesFlow = ai.defineFlow(
     return output!;
   }
 );
-

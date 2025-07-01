@@ -65,15 +65,15 @@ export function RecurringRoutes({
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <CardTitle>Recurring Routes</CardTitle>
-                <CardDescription>Manage your saved routes for quick entry.</CardDescription>
+                <CardTitle>Itinéraires récurrents</CardTitle>
+                <CardDescription>Gérez vos itinéraires enregistrés pour une saisie rapide.</CardDescription>
             </div>
             <div className="flex gap-2">
                  <Button onClick={openNewForm}>
-                    <Plus className="mr-2 h-4 w-4" /> New Route
+                    <Plus className="mr-2 h-4 w-4" /> Nouvel itinéraire
                  </Button>
                 <Button variant="outline" onClick={() => setIsOptimizerOpen(true)} disabled={recurringRoutes.length === 0}>
-                    <Sparkles className="mr-2 h-4 w-4 text-accent" /> Optimize Routes
+                    <Sparkles className="mr-2 h-4 w-4 text-accent" /> Optimiser les itinéraires
                 </Button>
             </div>
         </div>
@@ -101,10 +101,10 @@ export function RecurringRoutes({
                 </CardContent>
                 <CardFooter className="flex justify-end gap-2 bg-muted/50 p-3 rounded-b-lg">
                   <AddTripFromRouteDialog route={route} setDailyTrips={setDailyTrips} />
-                  <Button variant="ghost" size="icon" onClick={() => openEditForm(route)} aria-label="Edit route">
+                  <Button variant="ghost" size="icon" onClick={() => openEditForm(route)} aria-label="Modifier l'itinéraire">
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => deleteRoute(route.id)} aria-label="Delete route">
+                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => deleteRoute(route.id)} aria-label="Supprimer l'itinéraire">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </CardFooter>
@@ -113,8 +113,8 @@ export function RecurringRoutes({
           </div>
         ) : (
           <div className="col-span-full text-center py-12 border-2 border-dashed rounded-lg">
-            <p className="text-muted-foreground">No recurring routes saved yet.</p>
-            <Button variant="link" onClick={openNewForm}>Create your first recurring route</Button>
+            <p className="text-muted-foreground">Aucun itinéraire récurrent enregistré pour le moment.</p>
+            <Button variant="link" onClick={openNewForm}>Créez votre premier itinéraire récurrent</Button>
           </div>
         )}
       </CardContent>
@@ -122,7 +122,7 @@ export function RecurringRoutes({
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingRoute ? 'Edit Recurring Route' : 'Add New Recurring Route'}</DialogTitle>
+            <DialogTitle>{editingRoute ? "Modifier l'itinéraire récurrent" : "Ajouter un nouvel itinéraire récurrent"}</DialogTitle>
           </DialogHeader>
           <RecurringRouteForm
             onSave={handleSaveRoute}
