@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from 'react';
 import { DailyTrip } from '@/types';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,7 +11,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -32,7 +32,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, Loader2 } from 'lucide-react';
+import { calculateDistance } from '@/ai/flows/calculate-distance-flow';
+import { useToast } from '@/hooks/use-toast';
 
 interface DailyTripsProps {
   dailyTrips: DailyTrip[];
@@ -40,29 +42,49 @@ interface DailyTripsProps {
 }
 
 const tripSchema = z.object({
-  name: z.string().min(1, { message: 'Le nom du trajet est requis.' }),
-  distance: z.coerce.number().min(0, { message: 'La distance doit être un nombre positif.' }),
+  startAddress: z.string().min(3, { message: "L'adresse de départ est requise (3 caractères min)." }),
+  endAddress: z.string().min(3, { message: "L'adresse d'arrivée est requise (3 caractères min)." }),
 });
 
 type TripFormValues = z.infer<typeof tripSchema>;
 
 export function DailyTrips({ dailyTrips, setDailyTrips }: DailyTripsProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
   const form = useForm<TripFormValues>({
     resolver: zodResolver(tripSchema),
     defaultValues: {
-      name: '',
-      distance: 0,
+      startAddress: '',
+      endAddress: '',
     },
   });
 
-  const addTrip = (data: TripFormValues) => {
-    const newTrip: DailyTrip = {
-      id: crypto.randomUUID(),
-      name: data.name,
-      distance: data.distance,
-    };
-    setDailyTrips((prev) => [newTrip, ...prev]);
-    form.reset();
+  const onSubmit = async (data: TripFormValues) => {
+    setIsLoading(true);
+    try {
+      const result = await calculateDistance({
+        startAddress: data.startAddress,
+        endAddress: data.endAddress,
+      });
+
+      const newTrip: DailyTrip = {
+        id: crypto.randomUUID(),
+        name: `${data.startAddress} → ${data.endAddress}`,
+        distance: result.distance,
+      };
+      setDailyTrips((prev) => [newTrip, ...prev]);
+      form.reset();
+    } catch (error) {
+      console.error("Échec du calcul de la distance", error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur de calcul',
+        description: "Impossible de calculer la distance. Veuillez réessayer.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const deleteTrip = (id: string) => {
@@ -75,19 +97,19 @@ export function DailyTrips({ dailyTrips, setDailyTrips }: DailyTripsProps) {
     <Card>
       <CardHeader>
         <CardTitle>Trajets d'aujourd'hui</CardTitle>
-        <CardDescription>Enregistrez vos trajets d'aujourd'hui. Ajoutez un nouveau trajet ou utilisez l'un de vos itinéraires récurrents ci-dessous.</CardDescription>
+        <CardDescription>Enregistrez vos trajets d'aujourd'hui. Saisissez un départ et une arrivée pour calculer la distance.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(addTrip)} className="flex flex-col sm:flex-row items-end gap-4 p-4 border rounded-lg bg-muted/50">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col sm:flex-row items-end gap-4 p-4 border rounded-lg bg-muted/50">
             <FormField
               control={form.control}
-              name="name"
+              name="startAddress"
               render={({ field }) => (
                 <FormItem className="flex-grow w-full sm:w-auto">
-                  <FormLabel>Nom du trajet</FormLabel>
+                  <FormLabel>Adresse de départ</FormLabel>
                   <FormControl>
-                    <Input placeholder="ex: Maison au travail" {...field} />
+                    <Input placeholder="ex: 123 Rue Principale, Anytown" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -95,19 +117,24 @@ export function DailyTrips({ dailyTrips, setDailyTrips }: DailyTripsProps) {
             />
             <FormField
               control={form.control}
-              name="distance"
+              name="endAddress"
               render={({ field }) => (
-                <FormItem className="w-full sm:w-auto">
-                  <FormLabel>Distance (km)</FormLabel>
+                <FormItem className="flex-grow w-full sm:w-auto">
+                  <FormLabel>Adresse d'arrivée</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.1" placeholder="e.g. 15.5" {...field} />
+                    <Input placeholder="ex: 456 Avenue du Chêne, Work City" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full sm:w-auto">
-              <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un trajet
+            <Button type="submit" className="w-full sm:w-auto" disabled={isLoading}>
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <PlusCircle className="mr-2 h-4 w-4" />
+              )}
+              {isLoading ? 'Calcul...' : 'Ajouter un trajet'}
             </Button>
           </form>
         </Form>
