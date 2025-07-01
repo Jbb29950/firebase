@@ -13,17 +13,17 @@ const initialRecurringRoutes: RecurringRoute[] = [
     {
         id: '1',
         name: 'Trajet du matin',
-        waypoints: ['123 Rue Principale, Anytown, FR', '456 Avenue du Chêne, Work City, FR'],
+        waypoints: ['1 Place de la Bastille, 75012 Paris', '1 Parvis de la Défense, 92800 Puteaux'],
     },
     {
         id: '2',
         name: 'Retour du soir',
-        waypoints: ['456 Avenue du Chêne, Work City, FR', '123 Rue Principale, Anytown, FR'],
+        waypoints: ['1 Parvis de la Défense, 92800 Puteaux', '1 Place de la Bastille, 75012 Paris'],
     },
     {
         id: '3',
         name: 'Courses du week-end',
-        waypoints: ['Maison', 'Épicerie', 'Bureau de poste', 'Quincaillerie', 'Maison'],
+        waypoints: ['129 rue Saint-Dominique, 75007 Paris', '38 rue de Sèvres, 75007 Paris', '52 rue du Louvre, 75001 Paris', '129 rue Saint-Dominique, 75007 Paris'],
     }
 ];
 
@@ -42,7 +42,7 @@ export default function Home() {
     const calculateMissingDistances = async () => {
         const routesToUpdate: RecurringRoute[] = JSON.parse(routesWithoutDistanceIds)
             .map((id: string) => recurringRoutes.find(r => r.id === id))
-            .filter(Boolean);
+            .filter((r): r is RecurringRoute => !!r);
 
         if (routesToUpdate.length === 0) return;
 
