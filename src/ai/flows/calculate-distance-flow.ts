@@ -35,6 +35,7 @@ async function getCoordinates(address: string, apiKey: string) {
         key: apiKey,
         limit: 1,
         language: 'fr',
+        countrycode: 'fr',
       },
     });
 
