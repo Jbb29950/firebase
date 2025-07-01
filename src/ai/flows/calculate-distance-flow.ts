@@ -1,15 +1,15 @@
 'use server';
 /**
- * @fileOverview Un flux Genkit pour calculer la distance entre deux adresses.
+ * @fileOverview Un flux Genkit pour calculer la distance entre deux adresses en utilisant OpenCage et OpenRouteService.
  *
  * - calculateDistance - Une fonction qui calcule la distance.
  * - CalculateDistanceInput - Le type d'entrée pour la fonction calculateDistance.
  * - CalculateDistanceOutput - Le type de retour pour la fonction calculateDistance.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-import {Client, Status} from '@googlemaps/google-maps-services-js';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+import axios from 'axios';
 
 const CalculateDistanceInputSchema = z.object({
   startAddress: z.string().describe("L'adresse de départ."),
@@ -26,7 +26,28 @@ export async function calculateDistance(input: CalculateDistanceInput): Promise<
   return calculateDistanceFlow(input);
 }
 
-const mapsClient = new Client({});
+// Fonction pour obtenir les coordonnées à partir d'une adresse en utilisant OpenCage
+async function getCoordinates(address: string, apiKey: string) {
+  try {
+    const response = await axios.get('https://api.opencagedata.com/geocode/v1/json', {
+      params: {
+        q: address,
+        key: apiKey,
+        limit: 1,
+        language: 'fr',
+      },
+    });
+
+    if (response.data.results.length > 0) {
+      const { lat, lng } = response.data.results[0].geometry;
+      return { longitude: lng, latitude: lat };
+    }
+    throw new Error(`Impossible de géocoder l'adresse : ${address}`);
+  } catch (error) {
+    console.error(`Erreur de géocodage pour ${address}:`, error);
+    throw new Error(`Une erreur est survenue lors du géocodage de l'adresse : ${address}`);
+  }
+}
 
 const calculateDistanceFlow = ai.defineFlow(
   {
@@ -35,39 +56,56 @@ const calculateDistanceFlow = ai.defineFlow(
     outputSchema: CalculateDistanceOutputSchema,
   },
   async (input) => {
-    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-    if (!apiKey) {
-      throw new Error("La clé d'API Google Maps n'est pas configurée. Veuillez l'ajouter à votre fichier .env.");
+    const openCageApiKey = process.env.OPENCAGE_API_KEY;
+    const openRouteServiceApiKey = process.env.OPENROUTESERVICE_API_KEY;
+
+    if (!openCageApiKey) {
+      throw new Error("La clé d'API OpenCage n'est pas configurée. Veuillez l'ajouter à votre fichier .env.");
+    }
+    if (!openRouteServiceApiKey) {
+      throw new Error("La clé d'API OpenRouteService n'est pas configurée. Veuillez l'ajouter à votre fichier .env.");
     }
 
     try {
-      const response = await mapsClient.directions({
-        params: {
-          origin: input.startAddress,
-          destination: input.endAddress,
-          key: apiKey,
-        },
-      });
+      // Obtenir les coordonnées pour les adresses de départ et d'arrivée
+      const startCoords = await getCoordinates(input.startAddress, openCageApiKey);
+      const endCoords = await getCoordinates(input.endAddress, openCageApiKey);
 
-      if (response.data.status === Status.OK && response.data.routes.length > 0) {
-        const route = response.data.routes[0];
-        const leg = route.legs[0];
-        if (leg) {
-          const distanceInMeters = leg.distance.value;
-          const distanceInKm = distanceInMeters / 1000;
-          return {
-            distance: parseFloat(distanceInKm.toFixed(1)),
-          };
+      // Calculer l'itinéraire en utilisant OpenRouteService
+      const orsResponse = await axios.post(
+        'https://api.openrouteservice.org/v2/directions/driving-car',
+        {
+          coordinates: [
+            [startCoords.longitude, startCoords.latitude],
+            [endCoords.longitude, endCoords.latitude],
+          ],
+        },
+        {
+          headers: {
+            'Authorization': openRouteServiceApiKey,
+            'Content-Type': 'application/json',
+          },
         }
+      );
+
+      if (orsResponse.data.routes && orsResponse.data.routes.length > 0) {
+        const distanceInMeters = orsResponse.data.routes[0].summary.distance;
+        const distanceInKm = distanceInMeters / 1000;
+        return {
+          distance: parseFloat(distanceInKm.toFixed(1)),
+        };
       }
-      
-      console.error('Erreur de l\'API Directions :', response.data.error_message || response.data.status);
-      throw new Error(`Impossible de calculer l'itinéraire. Statut : ${response.data.status}`);
+
+      throw new Error("Impossible de calculer l'itinéraire avec OpenRouteService.");
 
     } catch (error) {
-      console.error("Erreur lors de l'appel à l'API Google Maps", error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error("Erreur de l'API:", error.response.data);
+        throw new Error(`Erreur de l'API: ${error.response.status} ${error.response.statusText}`);
+      }
+      console.error("Erreur inattendue lors du calcul de la distance:", error);
       if (error instanceof Error) {
-        throw new Error(`Une erreur inattendue est survenue lors du calcul de la distance: ${error.message}`);
+        throw new Error(`Une erreur inattendue est survenue : ${error.message}`);
       }
       throw new Error("Une erreur inattendue est survenue lors du calcul de la distance.");
     }
