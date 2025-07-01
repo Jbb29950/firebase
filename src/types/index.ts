@@ -8,4 +8,5 @@ export interface RecurringRoute {
   id: string;
   name: string;
   waypoints: string[];
+  distance?: number;
 }

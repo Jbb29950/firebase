@@ -17,9 +17,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, MapPin, Sparkles, Route } from 'lucide-react';
-import { RecurringRouteForm, AddTripFromRouteDialog } from './recurring-route-modals';
+import { Plus, Edit, Trash2, MapPin, Sparkles, Route, Loader2 } from 'lucide-react';
+import { RecurringRouteForm } from './recurring-route-modals';
 import { RouteOptimizer } from './route-optimizer';
+import { useToast } from '@/hooks/use-toast';
 
 interface RecurringRoutesProps {
   recurringRoutes: RecurringRoute[];
@@ -35,6 +36,7 @@ export function RecurringRoutes({
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isOptimizerOpen, setIsOptimizerOpen] = useState(false);
   const [editingRoute, setEditingRoute] = useState<RecurringRoute | undefined>(undefined);
+  const { toast } = useToast();
 
   const handleSaveRoute = (route: RecurringRoute) => {
     if (editingRoute) {
@@ -58,6 +60,27 @@ export function RecurringRoutes({
 
   const deleteRoute = (id: string) => {
     setRecurringRoutes((prev) => prev.filter((r) => r.id !== id));
+  };
+
+  const handleUseRoute = (route: RecurringRoute) => {
+    if (typeof route.distance !== 'number') {
+      toast({
+        title: 'Distance non disponible',
+        description: 'La distance pour cet itinéraire est encore en cours de calcul.',
+        variant: 'default',
+      });
+      return;
+    }
+    const newTrip: DailyTrip = {
+      id: crypto.randomUUID(),
+      name: route.name,
+      distance: route.distance,
+    };
+    setDailyTrips(prev => [newTrip, ...prev]);
+    toast({
+        title: 'Trajet ajouté',
+        description: `"${route.name}" a été ajouté à vos trajets d'aujourd'hui.`,
+    })
   };
   
   return (
@@ -83,11 +106,21 @@ export function RecurringRoutes({
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {recurringRoutes.map((route) => (
               <Card key={route.id} className="flex flex-col hover:shadow-md transition-shadow duration-200">
-                <CardHeader>
+                <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Route className="h-5 w-5 text-primary" />
                     {route.name}
                   </CardTitle>
+                  <CardDescription className="flex items-center gap-1.5 pt-1">
+                    {typeof route.distance === 'number' ? (
+                        <>{route.distance.toFixed(1)} km</>
+                    ) : (
+                        <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Calcul de la distance...</span>
+                        </>
+                    )}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <ul className="space-y-2">
@@ -100,7 +133,13 @@ export function RecurringRoutes({
                   </ul>
                 </CardContent>
                 <CardFooter className="flex justify-end gap-2 bg-muted/50 p-3 rounded-b-lg">
-                  <AddTripFromRouteDialog route={route} setDailyTrips={setDailyTrips} />
+                  <Button 
+                    onClick={() => handleUseRoute(route)} 
+                    className="bg-accent text-accent-foreground hover:bg-accent/90" 
+                    disabled={typeof route.distance !== 'number'}
+                  >
+                    Utiliser l'itinéraire
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => openEditForm(route)} aria-label="Modifier l'itinéraire">
                     <Edit className="h-4 w-4" />
                   </Button>

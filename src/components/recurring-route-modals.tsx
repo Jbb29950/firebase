@@ -3,17 +3,19 @@
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { RecurringRoute, DailyTrip } from '@/types';
+import { RecurringRoute } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { PlusCircle, Trash2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { PlusCircle, Trash2, Loader2 } from 'lucide-react';
+import { DialogFooter } from '@/components/ui/dialog';
 import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { calculateTotalDistanceForRoute } from '@/lib/route-utils';
 
 const routeSchema = z.object({
-  name: z.string().min(1, 'Le nom de l\'itinéraire est requis.'),
-  waypoints: z.array(z.string().min(1, 'Le point de cheminement ne peut pas être vide.')).min(2, 'Au moins deux points de cheminement sont requis.'),
+  name: z.string().min(1, "Le nom de l'itinéraire est requis."),
+  waypoints: z.array(z.string()).min(2, 'Au moins deux points de cheminement sont requis.'),
 });
 
 type RouteFormValues = z.infer<typeof routeSchema>;
@@ -25,11 +27,14 @@ interface RecurringRouteFormProps {
 }
 
 export function RecurringRouteForm({ onSave, onClose, existingRoute }: RecurringRouteFormProps) {
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
   const form = useForm<RouteFormValues>({
     resolver: zodResolver(routeSchema),
     defaultValues: {
       name: existingRoute?.name || '',
-      waypoints: existingRoute?.waypoints || ['', ''],
+      waypoints: existingRoute?.waypoints?.length ? existingRoute.waypoints : ['', ''],
     },
   });
 
@@ -38,12 +43,39 @@ export function RecurringRouteForm({ onSave, onClose, existingRoute }: Recurring
     name: 'waypoints',
   });
 
-  const onSubmit = (data: RouteFormValues) => {
-    const route: RecurringRoute = {
-      id: existingRoute?.id || crypto.randomUUID(),
-      ...data,
-    };
-    onSave(route);
+  const onSubmit = async (data: RouteFormValues) => {
+    setIsSaving(true);
+    try {
+      const validWaypoints = data.waypoints.filter(wp => wp.trim() !== '');
+      if (validWaypoints.length < 2) {
+          toast({
+              variant: 'destructive',
+              title: 'Points de cheminement invalides',
+              description: 'Veuillez fournir au moins deux points de cheminement valides.',
+          });
+          setIsSaving(false);
+          return;
+      }
+
+      const totalDistance = await calculateTotalDistanceForRoute(validWaypoints);
+      
+      const route: RecurringRoute = {
+        id: existingRoute?.id || crypto.randomUUID(),
+        name: data.name,
+        waypoints: validWaypoints,
+        distance: totalDistance,
+      };
+      onSave(route);
+    } catch (error) {
+      console.error("Échec du calcul de la distance de l'itinéraire", error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur de calcul',
+        description: "Impossible de calculer la distance de l'itinéraire. Veuillez vérifier les adresses et réessayer.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -107,76 +139,12 @@ export function RecurringRouteForm({ onSave, onClose, existingRoute }: Recurring
         </div>
         <DialogFooter>
           <Button type="button" variant="ghost" onClick={onClose}>Annuler</Button>
-          <Button type="submit">Enregistrer l'itinéraire</Button>
+          <Button type="submit" disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSaving ? 'Calcul...' : "Enregistrer l'itinéraire"}
+          </Button>
         </DialogFooter>
       </form>
     </Form>
   );
-}
-
-const addTripSchema = z.object({
-    distance: z.coerce.number().positive("La distance doit être un nombre positif.")
-})
-type AddTripValues = z.infer<typeof addTripSchema>
-
-interface AddTripFromRouteDialogProps {
-    route: RecurringRoute,
-    setDailyTrips: React.Dispatch<React.SetStateAction<DailyTrip[]>>
-}
-export function AddTripFromRouteDialog({ route, setDailyTrips }: AddTripFromRouteDialogProps) {
-    const [open, setOpen] = useState(false);
-    const form = useForm<AddTripValues>({
-        resolver: zodResolver(addTripSchema),
-        defaultValues: { distance: 0 }
-    })
-
-    const onSubmit = (data: AddTripValues) => {
-        const newTrip: DailyTrip = {
-            id: crypto.randomUUID(),
-            name: route.name,
-            distance: data.distance
-        }
-        setDailyTrips(prev => [newTrip, ...prev]);
-        setOpen(false);
-        form.reset();
-    }
-    
-    return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button className="bg-accent text-accent-foreground hover:bg-accent/90">Utiliser l'itinéraire</Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Ajouter un trajet depuis '{route.name}'</DialogTitle>
-                    <DialogDescription>
-                        Saisissez la distance pour le trajet d'aujourd'hui en utilisant cet itinéraire.
-                    </DialogDescription>
-                </DialogHeader>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField
-                            control={form.control}
-                            name="distance"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Distance (km)</FormLabel>
-                                <FormControl>
-                                    <Input type="number" step="0.1" placeholder="e.g. 25.4" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                         <DialogFooter>
-                            <DialogClose asChild>
-                                <Button type="button" variant="ghost">Annuler</Button>
-                            </DialogClose>
-                            <Button type="submit">Ajouter aux trajets d'aujourd'hui</Button>
-                        </DialogFooter>
-                    </form>
-                </Form>
-            </DialogContent>
-        </Dialog>
-    )
 }
