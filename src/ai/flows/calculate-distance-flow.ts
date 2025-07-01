@@ -9,6 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {Client, Status} from '@googlemaps/google-maps-services-js';
 
 const CalculateDistanceInputSchema = z.object({
   startAddress: z.string().describe("L'adresse de départ."),
@@ -25,9 +26,8 @@ export async function calculateDistance(input: CalculateDistanceInput): Promise<
   return calculateDistanceFlow(input);
 }
 
-// REMARQUE : Il s'agit d'une implémentation fictive. Dans une application réelle, vous utiliseriez
-// un service comme l'API Google Maps Directions pour calculer la
-// distance réelle entre les deux adresses.
+const mapsClient = new Client({});
+
 const calculateDistanceFlow = ai.defineFlow(
   {
     name: 'calculateDistanceFlow',
@@ -35,13 +35,41 @@ const calculateDistanceFlow = ai.defineFlow(
     outputSchema: CalculateDistanceOutputSchema,
   },
   async (input) => {
-    console.log(`Calcul de la distance entre ${input.startAddress} et ${input.endAddress}`);
-    
-    // Simuler un appel API et retourner une distance aléatoire à des fins de démonstration.
-    const randomDistance = Math.random() * (50 - 5) + 5; // Distance aléatoire entre 5 et 50 km
-    
-    return {
-      distance: parseFloat(randomDistance.toFixed(1)),
-    };
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      throw new Error("La clé d'API Google Maps n'est pas configurée. Veuillez l'ajouter à votre fichier .env.");
+    }
+
+    try {
+      const response = await mapsClient.directions({
+        params: {
+          origin: input.startAddress,
+          destination: input.endAddress,
+          key: apiKey,
+        },
+      });
+
+      if (response.data.status === Status.OK && response.data.routes.length > 0) {
+        const route = response.data.routes[0];
+        const leg = route.legs[0];
+        if (leg) {
+          const distanceInMeters = leg.distance.value;
+          const distanceInKm = distanceInMeters / 1000;
+          return {
+            distance: parseFloat(distanceInKm.toFixed(1)),
+          };
+        }
+      }
+      
+      console.error('Erreur de l\'API Directions :', response.data.error_message || response.data.status);
+      throw new Error(`Impossible de calculer l'itinéraire. Statut : ${response.data.status}`);
+
+    } catch (error) {
+      console.error("Erreur lors de l'appel à l'API Google Maps", error);
+      if (error instanceof Error) {
+        throw new Error(`Une erreur inattendue est survenue lors du calcul de la distance: ${error.message}`);
+      }
+      throw new Error("Une erreur inattendue est survenue lors du calcul de la distance.");
+    }
   }
 );
